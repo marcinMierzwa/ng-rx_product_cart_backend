@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
 import { CreateCategoryOutputDto } from './dto/create-category-output.dto';
 import { CreateCategoryInputDto } from './dto/create-category-input.dto';
-import { GetCategoryOutputDto } from './dto/get-category-outpur.dto';
+import { GetCategoryOutputDto } from './dto/get-category-output.dto';
 
 @Injectable()
 export class CategoryService {
