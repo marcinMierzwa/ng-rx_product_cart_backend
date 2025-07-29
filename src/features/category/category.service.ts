@@ -11,22 +11,15 @@ export class CategoryService {
   async createOne(
     createCategorDto: CreateCategoryInputDto,
   ): Promise<CreateCategoryOutputDto> {
-    const newCategory = await this.dataBaseService.category.create({
+    return await this.dataBaseService.category.create({
       data: createCategorDto,
     });
-    return {
-        ...newCategory,
-        id: newCategory.id.toString()
-    }
   }
 
   async getAll(): Promise<GetCategoryOutputDto[]> {
     const categories = await this.dataBaseService.category.findMany({});
     if(!categories || categories.length ===0) throw new NotFoundException('Categories not found');
-    return categories.map((category) => ({
-        ...category,
-        id: category.id.toString()
-    })) 
+    return categories;
   }
 }
 

@@ -1,9 +1,3 @@
-
-class CategoryOutput {
-  id: string;
-  name: string;
-}
-
 export class GetProductOutputDto {
     id: string;
     title: string;
@@ -15,5 +9,8 @@ export class GetProductOutputDto {
     createdAt: Date; 
     updatedAt: Date;
     categoryId: string;
-    category? : CategoryOutput
+    category? : {
+      id: string;
+      name: string;
+    }
 }
