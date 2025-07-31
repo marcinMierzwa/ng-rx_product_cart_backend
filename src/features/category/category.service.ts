@@ -1,22 +1,22 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
-import { CreateCategoryOutputDto } from './dto/create-category-output.dto';
-import { CreateCategoryInputDto } from './dto/create-category-input.dto';
-import { GetCategoryOutputDto } from './dto/get-category-output.dto';
+import { CreateCategoryResponseDto } from './dto/create-category-output.dto';
+import { CreateCategoryDto } from './dto/create-category-input.dto';
+import { GetCategoryResponseDto } from './dto/get-category-output.dto';
 
 @Injectable()
 export class CategoryService {
   constructor(private readonly dataBaseService: DatabaseService) {}
 
-  async createOne(
-    createCategorDto: CreateCategoryInputDto,
-  ): Promise<CreateCategoryOutputDto> {
+  async createCategory(
+    createCategorDto: CreateCategoryDto,
+  ): Promise<CreateCategoryResponseDto> {
     return await this.dataBaseService.category.create({
       data: createCategorDto,
     });
   }
 
-  async getAll(): Promise<GetCategoryOutputDto[]> {
+  async getCategories(): Promise<GetCategoryResponseDto[]> {
     const categories = await this.dataBaseService.category.findMany({});
     if(!categories || categories.length ===0) throw new NotFoundException('Categories not found');
     return categories;

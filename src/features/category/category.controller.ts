@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { CategoryService } from './category.service';
-import { CreateCategoryInputDto } from './dto/create-category-input.dto';
+import { CreateCategoryDto } from './dto/create-category-input.dto';
 
 @Controller('category')
 export class CategoryController {
@@ -10,17 +10,17 @@ export class CategoryController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async CreateOne(@Body() createCategoryDto: CreateCategoryInputDto) {
+  async createCategory(@Body() createCategoryDto: CreateCategoryDto) {
     const createdCategory =
-      await this.categoryService.createOne(createCategoryDto);
+      await this.categoryService.createCategory(createCategoryDto);
     return {
       data: createdCategory
     };
   }
 
   @Get()
-  async GetAll() {
-    const categories = await this.categoryService.getAll();
+  async getCategories() {
+    const categories = await this.categoryService.getCategories();
     return {
       data: categories
     } 

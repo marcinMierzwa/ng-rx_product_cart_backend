@@ -5,7 +5,7 @@ import {
   MinLength,
 } from 'class-validator';
 
-export class CreateCategoryInputDto {
+export class CreateCategoryDto {
 
   @IsString()
   @IsNotEmpty()

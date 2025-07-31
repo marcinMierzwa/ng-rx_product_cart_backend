@@ -10,7 +10,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
-import { CreateProductInputDto } from './dto/create-product-input.dto';
+import { CreateProductDto } from './dto/create-product.dto';
 
 @Controller('product')
 export class ProductController {
@@ -20,25 +20,25 @@ export class ProductController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async CreateOne(@Body() createProductDto: CreateProductInputDto) {
+  async createProduct(@Body() createProductDto: CreateProductDto) {
     const createdProduct =
-      await this.productService.createOne(createProductDto);
+      await this.productService.createProduct(createProductDto);
     return {
       data: createdProduct,
     };
   }
 
   @Get()
-  async GetAll() {
-    const products = await this.productService.getAll();
+  async getProducts() {
+    const products = await this.productService.getProducts();
     return {
       data: products,
     };
   }
 
   @Get(':id')
-  async GetOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    const product = await this.productService.getOne(id);
+  async getProduct(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
+    const product = await this.productService.getProduct(id);
     return {
       data: product
     }

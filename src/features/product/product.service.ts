@@ -4,24 +4,23 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
-import { CreateProductInputDto } from './dto/create-product-input.dto';
-import { CreateProductOutputDto } from './dto/create-product-output.dto';
-import { GetProductOutputDto } from './dto/get-product.output.dto';
-import { Prisma } from '@prisma/client';
+import { CreateProductDto } from './dto/create-product.dto';
+import { CreateProductResponseDto } from './dto/create-product-output.dto';
+import { GetProductResponseDto } from './dto/get-product.output.dto';
 
 @Injectable()
 export class ProductService {
   constructor(private readonly dataBaseService: DatabaseService) {}
 
-  async createOne(
-    createProductDto: CreateProductInputDto,
-  ): Promise<CreateProductOutputDto> {
+  async createProduct(
+    createProductDto: CreateProductDto,
+  ): Promise<CreateProductResponseDto> {
      return await this.dataBaseService.product.create({
       data: createProductDto,
     });
   }
 
-  async getAll(): Promise<GetProductOutputDto[]> {
+  async getProducts(): Promise<GetProductResponseDto[]> {
     const products = await this.dataBaseService.product.findMany({
       include: {
         category: true,
@@ -43,7 +42,7 @@ export class ProductService {
     });
   }
 
-  async getOne(productId: string): Promise<GetProductOutputDto> {
+  async getProduct(productId: string): Promise<GetProductResponseDto> {
     const product = await this.dataBaseService.product.findUnique({
       where: {
         id: productId,

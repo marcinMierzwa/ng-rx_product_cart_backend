@@ -1,4 +1,4 @@
-export class GetCategoryOutputDto {
+export class GetCategoryResponseDto {
     id: string;
     name: string;
     createdAt: Date;
