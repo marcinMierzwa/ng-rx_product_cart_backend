@@ -1,5 +1,5 @@
 export class CreateProductResponseDto {
-    id: string;
+      id: string;
     title: string;
     price: number;
     description: string;
@@ -9,6 +9,10 @@ export class CreateProductResponseDto {
     createdAt: Date; 
     updatedAt: Date;
     categoryId: string;
+    category? : {
+      id: string;
+      name: string;
+    }
 }
 
 // model Product {

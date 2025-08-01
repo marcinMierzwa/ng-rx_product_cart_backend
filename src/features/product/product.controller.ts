@@ -5,46 +5,39 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseArrayPipe,
   ParseUUIDPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
+import { GetProductsQueryDto } from './dto/get-products-query.dto';
 
-@Controller('product')
+@Controller('products')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
-  //http://localhost:3000/product
+  //http://localhost:3000/products
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createProduct(@Body() createProductDto: CreateProductDto) {
-    const createdProduct =
-      await this.productService.createProduct(createProductDto);
-    return {
-      data: createdProduct,
-    };
+  async createProduct(@Body() createProductDto: CreateProductDto) {    
+    return await this.productService.createProduct(createProductDto);
   }
 
+  //http://localhost:3000/products?page=2&search=Green Panel Tee
   @Get()
-  async getProducts() {
-    const products = await this.productService.getProducts();
-    return {
-      data: products,
-    };
+  async getProducts(@Query() query: GetProductsQueryDto) {
+     return await this.productService.getProducts(query);
   }
 
   @Get(':id')
   async getProduct(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    const product = await this.productService.getProduct(id);
-    return {
-      data: product
-    }
+    return await this.productService.getProduct(id);
   }
+}
 
-  //---------seeding data base------------
+//---------seeding data base------------
 
   // @Post('many')
   // async createMany(
@@ -53,4 +46,4 @@ export class ProductController {
   // ) {
   //   return this.productService.createMany(createProductsDto);
   // }
-}
+

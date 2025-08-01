@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/commo
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category-input.dto';
 
-@Controller('category')
+@Controller('categories')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
@@ -11,18 +11,11 @@ export class CategoryController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async createCategory(@Body() createCategoryDto: CreateCategoryDto) {
-    const createdCategory =
-      await this.categoryService.createCategory(createCategoryDto);
-    return {
-      data: createdCategory
-    };
+    return await this.categoryService.createCategory(createCategoryDto);
   }
 
   @Get()
   async getCategories() {
-    const categories = await this.categoryService.getCategories();
-    return {
-      data: categories
-    } 
+    return await this.categoryService.getCategories();
   }
 }

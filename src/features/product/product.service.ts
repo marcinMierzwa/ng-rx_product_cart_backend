@@ -3,10 +3,13 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { DatabaseService } from '../../database/database.service';
+import { DatabaseService } from '../../core/database/database.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { CreateProductResponseDto } from './dto/create-product-output.dto';
 import { GetProductResponseDto } from './dto/get-product.output.dto';
+import { GetProductsQueryDto } from './dto/get-products-query.dto';
+import { PaginatedResponseDto } from '../../common/dto/paginated-response.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProductService {
@@ -15,31 +18,59 @@ export class ProductService {
   async createProduct(
     createProductDto: CreateProductDto,
   ): Promise<CreateProductResponseDto> {
-     return await this.dataBaseService.product.create({
+    return await this.dataBaseService.product.create({
       data: createProductDto,
+      include: { category: true },
     });
   }
 
-  async getProducts(): Promise<GetProductResponseDto[]> {
-    const products = await this.dataBaseService.product.findMany({
-      include: {
-        category: true,
-      },
-    });
-    if (!products || products.length === 0)
-      throw new NotFoundException('Products not found');
-    return products.map((product) => {
+  async getProducts(
+    query: GetProductsQueryDto,
+  ): Promise<PaginatedResponseDto<GetProductResponseDto>> {
+    const { page, pageSize, search, categoryId } = query;
+    const skip = (page - 1) * pageSize;
+
+    // Dynamically build the 'where' clause for Prisma.
+    // Using the 'Prisma.ProductWhereInput' type provides great autocompletion in the editor.
+    const where: Prisma.ProductWhereInput = {};
+
+    if (search) {
+      where.title = {
+        contains: search, // 'contains' looks for a substring
+        mode: 'insensitive', // 'insensitive' makes the search case-insensitive (like ILIKE in SQL)
+      };
+    }
+
+    if (categoryId) {
+      where.categoryId = categoryId;
+    }
+
+    // Execute TWO database queries concurrently in a single transaction for optimization.
+    // Using `Promise.all` or `$transaction` runs them in parallel, which is faster.
+    const [products, totalItems] = await this.dataBaseService.$transaction([
+      // First query: get the list of products for the current page
+      this.dataBaseService.product.findMany({
+        skip, // Skip X records
+        take: pageSize, // Take Y records
+        where, // Apply our dynamic filters
+        include: {
+          category: true, // Include the related category data
+        },
+        // You can add sorting here in the future, e.g.,
+        // orderBy: { createdAt: 'desc' }
+      }),
+      // Second query: count ALL products matching the filters (without pagination)
+      this.dataBaseService.product.count({ where }),
+    ]);
+
+    const mappedProducts = products.map((product) => {
       const { category, ...restOfProduct } = product;
       return {
         ...restOfProduct,
-        category: category
-          ? {
-              id: category.id,
-              name: category.name,
-            }
-          : undefined,
+        categoryName: category?.name, // Dokładnie ta logika, co na froncie
       };
     });
+    return new PaginatedResponseDto(mappedProducts, totalItems, page, pageSize);
   }
 
   async getProduct(productId: string): Promise<GetProductResponseDto> {
@@ -52,35 +83,32 @@ export class ProductService {
       },
     });
     if (!product) throw new NotFoundException('Product not found.');
-    return {
-      ...product,
-      category: product.category
-        ? {
-            id: product.category.id,
-            name: product.category.name,
-          }
-        : undefined,
+    const { category, ...restOfProduct } = product;
+    const mappedProducts = {
+      ...restOfProduct,
+      categoryName: category?.name,
     };
+    return mappedProducts;
   }
-  //---------seeding data base----------
-  //    async createMany(createProductsDto: CreateProductInputDto[]): Promise<{ count: number }> {
-  //     try {
-  //       const result = await this.dataBaseService.product.createMany({
-  //         data: createProductsDto,
-  //         skipDuplicates: true,
-  //       });
-
-  //       return result;
-
-  //     } catch (error) {
-  //       if (error instanceof Prisma.PrismaClientKnownRequestError) {
-  //         if (error.code === 'P2002') {
-  //           throw new InternalServerErrorException(
-  //             'One or more products could not be created because of a duplicate title.',
-  //           );
-  //         }
-  //       }
-  //       throw new InternalServerErrorException('Could not create products.');
-  //     }
-  //   }
 }
+//---------seeding data base----------
+//    async createMany(createProductsDto: CreateProductInputDto[]): Promise<{ count: number }> {
+//     try {
+//       const result = await this.dataBaseService.product.createMany({
+//         data: createProductsDto,
+//         skipDuplicates: true,
+//       });
+
+//       return result;
+
+//     } catch (error) {
+//       if (error instanceof Prisma.PrismaClientKnownRequestError) {
+//         if (error.code === 'P2002') {
+//           throw new InternalServerErrorException(
+//             'One or more products could not be created because of a duplicate title.',
+//           );
+//         }
+//       }
+//       throw new InternalServerErrorException('Could not create products.');
+//     }
+//   }
