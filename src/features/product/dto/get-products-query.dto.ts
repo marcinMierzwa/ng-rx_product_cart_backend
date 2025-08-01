@@ -1,5 +1,5 @@
 import { Transform, Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
 
 export class GetProductsQueryDto {
   @IsOptional()
@@ -24,5 +24,11 @@ export class GetProductsQueryDto {
   @IsUUID('4', { message: 'Category ID must be a valid UUID v4.' })
   readonly categoryId?: string;
 
-  // here more params like sort etc..
+  @IsOptional()
+  @IsIn(['createdAt', 'price', 'title', 'ratingRate'])
+  readonly sortBy?: string = 'createdAt';
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  readonly sortOrder?: string = 'desc';
 }

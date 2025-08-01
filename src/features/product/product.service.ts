@@ -27,12 +27,17 @@ export class ProductService {
   async getProducts(
     query: GetProductsQueryDto,
   ): Promise<PaginatedResponseDto<GetProductResponseDto>> {
-    const { page, pageSize, search, categoryId } = query;
+    const { page, pageSize, search, categoryId, sortBy, sortOrder } = query;
     const skip = (page - 1) * pageSize;
+    console.log(query);
 
     // Dynamically build the 'where' clause for Prisma.
     // Using the 'Prisma.ProductWhereInput' type provides great autocompletion in the editor.
     const where: Prisma.ProductWhereInput = {};
+
+    const orderBy: Prisma.ProductOrderByWithRelationInput = {
+      [sortBy]: sortOrder,
+    };
 
     if (search) {
       where.title = {
@@ -56,8 +61,7 @@ export class ProductService {
         include: {
           category: true, // Include the related category data
         },
-        // You can add sorting here in the future, e.g.,
-        // orderBy: { createdAt: 'desc' }
+        orderBy,
       }),
       // Second query: count ALL products matching the filters (without pagination)
       this.dataBaseService.product.count({ where }),
