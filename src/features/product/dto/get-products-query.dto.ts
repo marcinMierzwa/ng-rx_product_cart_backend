@@ -30,5 +30,10 @@ export class GetProductsQueryDto {
 
   @IsOptional()
   @IsIn(['asc', 'desc'])
-  readonly sortOrder?: string = 'desc';
+  readonly sortOrder?: 'asc' | 'desc' = 'desc';
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['all', 'bestsellers', 'byCategory'])
+  readonly displayMode?: string = 'all';
 }

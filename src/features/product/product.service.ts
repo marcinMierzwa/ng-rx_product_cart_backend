@@ -27,12 +27,18 @@ export class ProductService {
   async getProducts(
     query: GetProductsQueryDto,
   ): Promise<PaginatedResponseDto<GetProductResponseDto>> {
-    const { page, pageSize, search, categoryId, sortBy, sortOrder } = query;
-    const skip = (page - 1) * pageSize;
-    console.log(query);
+    const {
+      page,
+      pageSize,
+      search,
+      categoryId,
+      sortBy,
+      sortOrder,
+      displayMode,
+    } = query;
 
-    // Dynamically build the 'where' clause for Prisma.
-    // Using the 'Prisma.ProductWhereInput' type provides great autocompletion in the editor.
+    const skip = (page - 1) * pageSize;
+
     const where: Prisma.ProductWhereInput = {};
 
     const orderBy: Prisma.ProductOrderByWithRelationInput = {
@@ -52,29 +58,40 @@ export class ProductService {
 
     // Execute TWO database queries concurrently in a single transaction for optimization.
     // Using `Promise.all` or `$transaction` runs them in parallel, which is faster.
-    const [products, totalItems] = await this.dataBaseService.$transaction([
-      // First query: get the list of products for the current page
-      this.dataBaseService.product.findMany({
-        skip, // Skip X records
-        take: pageSize, // Take Y records
-        where, // Apply our dynamic filters
-        include: {
-          category: true, // Include the related category data
-        },
-        orderBy,
-      }),
-      // Second query: count ALL products matching the filters (without pagination)
-      this.dataBaseService.product.count({ where }),
-    ]);
+    const [products, totalItemsFromDb] =
+      await this.dataBaseService.$transaction([
+        // First query: get the list of products for the current page
+        this.dataBaseService.product.findMany({
+          skip, // Skip X records
+          take: pageSize, // Take Y records
+          where, // Apply our dynamic filters
+          include: {
+            category: true, // Include the related category data
+          },
+          orderBy,
+        }),
+        // Second query: count ALL products matching the filters (without pagination)
+        this.dataBaseService.product.count({ where }),
+      ]);
+
+    let finalTotalItems = totalItemsFromDb;
+    if (displayMode === 'bestsellers') {
+      finalTotalItems = products.length < pageSize ? products.length : pageSize;
+    }
 
     const mappedProducts = products.map((product) => {
       const { category, ...restOfProduct } = product;
       return {
         ...restOfProduct,
-        categoryName: category?.name, // Dokładnie ta logika, co na froncie
+        categoryName: category?.name,
       };
     });
-    return new PaginatedResponseDto(mappedProducts, totalItems, page, pageSize);
+    return new PaginatedResponseDto(
+      mappedProducts,
+      finalTotalItems,
+      page,
+      pageSize,
+    );
   }
 
   async getProduct(productId: string): Promise<GetProductResponseDto> {
